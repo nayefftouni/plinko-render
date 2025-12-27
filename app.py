@@ -257,10 +257,20 @@ def drop_ball():
                     multiplier = win_amount
                     user.prize_claimed = True
 
-        possible_indices = [
-            i for i, x in enumerate(SLOT_LAYOUT) if x == int(multiplier)
-        ]
-        slot_index = random.choice(possible_indices) if possible_indices else 8
+        # -------------------------------------------------
+        # SLOT INDEX MUST MATCH ACTUAL OUTCOME
+        # -------------------------------------------------
+        if win_amount > 0:
+            possible_indices = [
+                i for i, x in enumerate(SLOT_LAYOUT) if x == int(win_amount)
+            ]
+        else:
+            possible_indices = [
+                i for i, x in enumerate(SLOT_LAYOUT) if x == 0
+            ]
+        
+        slot_index = random.choice(possible_indices)
+
 
         user.balance -= bet_amount
         user.winnings += win_amount
@@ -365,4 +375,5 @@ def init_game():
 # -------------------------------------------------
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5010")))
+
 
