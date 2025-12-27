@@ -241,37 +241,38 @@ def drop_ball():
             return jsonify({"error": "No balls left"}), 400
 
         bet_amount = 1.0
-        multiplier = 0
         win_amount = 0.0
 
-        # --- DESTINY LOGIC (UNCHANGED) ---
-        if user.assigned_prize == 0:
-            multiplier = 0
-        else:
-            if not user.prize_claimed:
-                is_last_ball = (user.balance <= 1.0)
-                lucky_hit = (random.random() < 0.15)
+        # -------------------------------------------------
+        # DESTINY LOGIC (SINGLE SOURCE OF TRUTH)
+        # -------------------------------------------------
+        if user.assigned_prize > 0 and not user.prize_claimed:
+            is_last_ball = user.balance <= 1.0
+            lucky_hit = random.random() < 0.15
 
-                if is_last_ball or lucky_hit:
-                    win_amount = user.assigned_prize
-                    multiplier = win_amount
-                    user.prize_claimed = True
+            if is_last_ball or lucky_hit:
+                win_amount = float(user.assigned_prize)
+                user.prize_claimed = True
 
         # -------------------------------------------------
-        # SLOT INDEX MUST MATCH ACTUAL OUTCOME
+        # SLOT INDEX — HARD LOCKED TO OUTCOME
         # -------------------------------------------------
         if win_amount > 0:
+            # MUST land on exact prize
             possible_indices = [
                 i for i, x in enumerate(SLOT_LAYOUT) if x == int(win_amount)
             ]
         else:
+            # Prize not won OR already consumed → ZERO ONLY
             possible_indices = [
                 i for i, x in enumerate(SLOT_LAYOUT) if x == 0
             ]
-        
+
         slot_index = random.choice(possible_indices)
 
-
+        # -------------------------------------------------
+        # APPLY GAME STATE
+        # -------------------------------------------------
         user.balance -= bet_amount
         user.winnings += win_amount
 
@@ -281,14 +282,13 @@ def drop_ball():
 
         return jsonify({
             "slot_index": slot_index,
-            "multiplier": multiplier,
             "win_amount": win_amount,
             "new_balance": user.balance,
             "new_winnings": user.winnings,
             "game_over": game_over,
         })
 
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         logger.exception("Drop failed")
         return jsonify({"error": "Server error"}), 500
@@ -375,5 +375,6 @@ def init_game():
 # -------------------------------------------------
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5010")))
+
 
 
