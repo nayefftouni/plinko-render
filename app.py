@@ -332,10 +332,19 @@ def init_game():
     db.drop_all()
     db.create_all()
 
+    # Total Prize Pool: 12,775 KD
+    # Total Users: 1,330
+    # No one gets 0. The minimum prize is 1 KD.
     pool = (
-        [1000] * 2 + [100] * 20 + [50] * 43 + [25] * 60 +
-        [10] * 100 + [5] * 200 + [1] * 350 + [0] * 555
+        [1000] * 2 + 
+        [100] * 20 + 
+        [50] * 43 + 
+        [25] * 60 +
+        [10] * 100 + 
+        [5] * 755 +   # (Original 200 + The new 555) = 755 users getting 5 KD
+        [1] * 350     # 350 users getting 1 KD
     )
+    
     random.shuffle(pool)
 
     users = [
@@ -349,10 +358,11 @@ def init_game():
 
     db.session.add_all(users)
     db.session.commit()
-    logger.info("✅ 1330 users created")
+    logger.info(f"✅ {len(users)} users created. Total Pool: {sum(pool)} KD")
 
 # -------------------------------------------------
 # ENTRY
 # -------------------------------------------------
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5010")))
+
