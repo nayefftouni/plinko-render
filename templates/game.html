@@ -211,11 +211,8 @@
 
         // Handle rate limit cleanly (Render protection)
         if (res.status === 429) {
-          // Don't reload. Just slow down client.
           showToast("هدّي اللعب شوي 😅");
-          // Drop one queued attempt (so player doesn't get stuck)
           dropQueue = Math.max(0, dropQueue - 1);
-          // small cool-down before retrying remaining queue
           setTimeout(() => { dropInFlight = false; processDropQueue(); }, 350);
           updateUIButtons();
           return;
@@ -224,12 +221,10 @@
         const data = await res.json();
 
         if (!res.ok || data.error) {
-          // If server says no balls/finished/etc, stop queue gracefully
           showToast("تم تحديث الحالة");
           dropQueue = 0;
           dropInFlight = false;
           updateUIButtons();
-          // Safe refresh to sync state (not spammy)
           setTimeout(() => window.location.reload(), 600);
           return;
         }
@@ -241,46 +236,43 @@
         // Consume one queued click
         dropQueue = Math.max(0, dropQueue - 1);
 
-        // Visual drop + animation
-        spawnBall(data.slot_index, data.new_winnings, data.win_amount, data.game_over, data.multiplier);
+        // -------------------------------------------------
+        // ✅ HARD-LOCK VISUALS TO PAYOUT (SELF-HEAL IF SERVER MISMATCH)
+        // -------------------------------------------------
+        const normalizedSlot = normalizeSlotIndex(data.slot_index, data.win_amount);
 
-        // If game over as per server, unlock cashout
+        // Visual drop + animation (NO multiplier dependency)
+        spawnBall(normalizedSlot, data.new_winnings, data.win_amount, data.game_over);
+
         if (data.game_over) {
           cashoutBtn.disabled = false;
-          // stop queue since server says no more balls
           dropQueue = 0;
         }
 
       } catch (e) {
         if (e && e.name === "AbortError") {
-          // navigation/unload - ignore
+          // ignore
         } else {
           showToast("خطأ في الاتصال");
         }
-        // Drop one queued attempt to prevent infinite stuck queue on weak networks
         dropQueue = Math.max(0, dropQueue - 1);
       } finally {
         dropInFlight = false;
         abortController = null;
         updateUIButtons();
 
-        // Continue processing immediately (fast mode feel)
         if (dropQueue > 0 && currentBalls > 0) {
-          // micro delay avoids pegging CPU/network
           setTimeout(processDropQueue, 0);
         }
       }
     }
 
-    // --- CONTROLS (FAST MODE ENABLED, SERVER-SAFE) ---
     dropBtn.onclick = () => {
       if (currentBalls < 1) { showToast("لا يوجد كرات"); return; }
 
       if (bgMusic.paused) bgMusic.play().catch(()=>{});
       playSound('drop');
 
-      // Add to queue (rapid fire feel) but do not hit server concurrently
-      // Also prevent queue from growing forever (safety cap)
       const maxQueue = 10;
       if (dropQueue >= maxQueue) {
         showToast("لحظة…");
@@ -292,7 +284,6 @@
       processDropQueue();
     };
 
-    // Stop any in-flight request on page leave
     window.addEventListener("beforeunload", () => {
       try { if (abortController) abortController.abort(); } catch (_) {}
     });
@@ -304,9 +295,7 @@
 
       try {
         await fetch('/api/finish', { method: 'POST', credentials: 'same-origin' });
-      } catch (e) {
-        // even if finish fails, redirecting is fine; result route finalizes anyway in backend
-      }
+      } catch (e) {}
       window.location.href = "{{ url_for('result') }}";
     };
 
@@ -374,20 +363,54 @@
 
     let lastTs = 0;
     const GRAVITY = 2300;
-    const AIR_DRAG = 0.99;
 
-    function spawnBall(targetSlot, winTotal, winAmt, isGameOver, multiplier) {
+    // -------------------------------------------------
+    // ✅ NORMALIZE SLOT TO PAYOUT (FRONTEND FAILSAFE)
+    // -------------------------------------------------
+    function normalizeSlotIndex(slotIndex, winAmt) {
+      const w = Math.floor(Number(winAmt || 0));
+      const idx = Number(slotIndex);
+
+      if (!Number.isFinite(idx) || idx < 0 || idx >= SLOT_MULTIPLIERS.length) {
+        // fallback to zero slots
+        return 8;
+      }
+
+      // If winAmt is 0, force one of the 0 slots
+      if (!w || w <= 0) {
+        if (SLOT_MULTIPLIERS[idx] === 0) return idx;
+        // prefer 8/9
+        return (Math.random() < 0.5) ? 8 : 9;
+      }
+
+      // If winAmt > 0, force a slot that matches winAmt
+      if (SLOT_MULTIPLIERS[idx] === w) return idx;
+
+      const matches = [];
+      for (let i = 0; i < SLOT_MULTIPLIERS.length; i++) {
+        if (SLOT_MULTIPLIERS[i] === w) matches.push(i);
+      }
+      if (matches.length) return matches[Math.floor(Math.random() * matches.length)];
+
+      // If layout does not contain it, fallback to center zero
+      return 8;
+    }
+
+    function spawnBall(targetSlot, winTotal, winAmt, isGameOver) {
       const targetX = (targetSlot * slotWidth) + (slotWidth / 2);
+
+      // Choose path based on the SLOT label (visual), not any other variable
+      const slotLabel = SLOT_MULTIPLIERS[targetSlot];
 
       let selectedPathKey = 'Center_Slide_L';
 
-      if (multiplier === 0) {
+      if (slotLabel === 0) {
         selectedPathKey = (targetSlot === 8) ? 'Center_Slide_L' : 'Center_Slide_R';
       }
-      else if (multiplier >= 1000) selectedPathKey = (targetSlot < 9) ? '1000_L' : '1000_R';
-      else if (multiplier >= 100) selectedPathKey = (targetSlot < 9) ? '100_L' : '100_R';
-      else if (multiplier >= 50) selectedPathKey = (targetSlot < 9) ? '50_L' : '50_R';
-      else if (multiplier >= 10) selectedPathKey = (targetSlot < 9) ? '10_L' : '10_R';
+      else if (slotLabel >= 1000) selectedPathKey = (targetSlot < 9) ? '1000_L' : '1000_R';
+      else if (slotLabel >= 100) selectedPathKey = (targetSlot < 9) ? '100_L' : '100_R';
+      else if (slotLabel >= 50) selectedPathKey = (targetSlot < 9) ? '50_L' : '50_R';
+      else if (slotLabel >= 10) selectedPathKey = (targetSlot < 9) ? '10_L' : '10_R';
       else selectedPathKey = (targetSlot < 9) ? 'Center_Slide_L' : 'Center_Slide_R';
 
       const script = PATHS[selectedPathKey] || PATHS['Center_Slide_L'];
@@ -395,10 +418,10 @@
       let restitution = 0.65;
       let drag = 0.99;
 
-      if (multiplier === 0) {
+      if (slotLabel === 0) {
         restitution = 0.3;
         drag = 0.96;
-      } else if (multiplier >= 100) {
+      } else if (slotLabel >= 100) {
         restitution = 0.75;
         drag = 0.995;
       }
@@ -407,7 +430,7 @@
         x: width/2, y: 60,
         vx: (Math.random()-0.5)*10, vy: 0, r: 6,
         targetX: targetX, targetSlot: targetSlot,
-        finalWin: winTotal, winAmt: winAmt, gameOver: isGameOver,
+        finalWin: winTotal, winAmt: Number(winAmt || 0), gameOver: isGameOver,
         path: script,
         pathIndex: 0,
         restitution: restitution,
@@ -415,7 +438,6 @@
       });
     }
 
-    // --- GAME LOOP ---
     function loop(ts) {
       if (!lastTs) lastTs = ts;
       let dt = (ts - lastTs) / 1000; lastTs = ts;
@@ -512,7 +534,8 @@
           if (b.winAmt > 0) {
             spawnParticles(b.x, slotY, '#facc15', 15);
             showToast(`+${b.winAmt} د.ك`);
-            playSound(SLOT_MULTIPLIERS[b.targetSlot] >= 10 ? 'winBig' : 'winSmall');
+            // ✅ sound based on actual payout, not slot label
+            playSound(b.winAmt >= 10 ? 'winBig' : 'winSmall');
           }
 
           balls.splice(i, 1);
