@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -15,565 +14,305 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background-repeat: no-repeat;
-      background-position: center center;
-      background-attachment: fixed;
-      background-size: cover;
-      background-image: url("{{ url_for('static', filename='game_web.jpg') }}");
+      background: url("{{ url_for('static', filename='game_web.jpg') }}") center/cover no-repeat fixed;
       color: #fff;
       overflow: hidden;
     }
 
     @media (max-width: 768px) {
-        body { background-image: url("{{ url_for('static', filename='game_mobile.jpg') }}"); }
+      body { background-image: url("{{ url_for('static', filename='game_mobile.jpg') }}"); }
     }
 
     .app {
-      width: 100%; max-width: 420px; height: 90vh; max-height: 850px;
-      background: rgba(2, 6, 23, 0.95); border-radius: 24px;
-      border: 1px solid rgba(148,163,184,0.3); padding: 12px;
-      display: flex; flex-direction: column; position: relative;
+      width: 100%;
+      max-width: 420px;
+      height: 90vh;
+      max-height: 850px;
+      background: rgba(2, 6, 23, 0.95);
+      border-radius: 24px;
+      border: 1px solid rgba(148,163,184,0.3);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
       box-shadow: 0 20px 50px rgba(0,0,0,0.8);
     }
 
-    .header { margin-bottom: 10px; text-align: center; }
-    .title { font-size: 20px; font-weight: 900; color: #f59e0b; letter-spacing: 1px; text-shadow: 0 2px 10px rgba(245, 158, 11, 0.3); }
+    .header { text-align: center; margin-bottom: 10px; }
+    .title { font-size: 20px; font-weight: 900; color: #f59e0b; }
     .subtitle { font-size: 11px; color: #94a3b8; }
 
     .stats-row { display: flex; gap: 8px; margin-bottom: 10px; }
     .stat-card {
-      flex: 1; background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-      border: 1px solid #334155; padding: 10px; border-radius: 12px; text-align: center;
+      flex: 1;
+      background: linear-gradient(180deg, #1e293b, #0f172a);
+      border: 1px solid #334155;
+      padding: 10px;
+      border-radius: 12px;
+      text-align: center;
     }
-    .stat-label { font-size: 10px; color: #94a3b8; margin-bottom: 2px; }
-    .stat-value { font-size: 18px; font-weight: 700; color: #fff; }
-    .win-text { color: #facc15; } .ball-text { color: #4ade80; }
+    .stat-label { font-size: 10px; color: #94a3b8; }
+    .stat-value { font-size: 18px; font-weight: 700; }
+    .win-text { color: #facc15; }
+    .ball-text { color: #4ade80; }
 
     .canvas-wrapper {
-      flex: 1; border: 2px solid #1e40af; border-radius: 18px;
-      overflow: hidden; position: relative;
+      flex: 1;
+      border: 2px solid #1e40af;
+      border-radius: 18px;
+      overflow: hidden;
       background: radial-gradient(circle at 50% 20%, #1e1b4b, #000);
-      box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
     }
+
     canvas { width: 100%; height: 100%; display: block; }
 
     .controls { display: flex; gap: 10px; margin-top: 12px; padding-bottom: 25px; }
     .main-btn {
-      flex: 1; padding: 14px; border-radius: 12px; border: none;
-      font-weight: 900; cursor: pointer; font-size: 15px;
-      transition: transform 0.1s; display: flex; align-items: center; justify-content: center;
+      flex: 1;
+      padding: 14px;
+      border-radius: 12px;
+      border: none;
+      font-weight: 900;
+      font-size: 15px;
+      cursor: pointer;
     }
-    .main-btn:active { transform: translateY(2px); }
-    .btn-drop { background: linear-gradient(135deg, #f59e0b, #d97706); color: #000; box-shadow: 0 4px 0 #92400e; }
-    .btn-cashout { background: linear-gradient(135deg, #22c55e, #15803d); color: #fff; box-shadow: 0 4px 0 #14532d; }
-    .btn-cashout:disabled { background: #334155; color: #94a3b8; box-shadow: none; opacity: 0.5; }
 
-    .ticker-wrap {
-      position: absolute; bottom: 0; left: 0; width: 100%;
-      background: #000; border-top: 1px solid #333; height: 24px; display: flex; align-items: center;
-      border-radius: 0 0 24px 24px; overflow: hidden;
+    .btn-drop { background: linear-gradient(135deg, #f59e0b, #d97706); color: #000; }
+    .btn-drop:disabled { opacity: 0.5; }
+
+    .btn-cashout {
+      background: linear-gradient(135deg, #22c55e, #15803d);
+      color: #fff;
     }
-    .ticker { display: flex; white-space: nowrap; animation: ticker 15s linear infinite; }
-    .ticker-item { padding: 0 20px; font-size: 10px; color: #94a3b8; }
-    .ticker-item strong { color: #facc15; }
-    @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(100%); } }
+    .btn-cashout:disabled { opacity: 0.5; }
 
     .toast {
-      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      background: rgba(0,0,0,0.9); padding: 12px 24px; border-radius: 12px;
-      font-size: 14px; border: 1px solid #f59e0b; color: #f59e0b; font-weight: bold;
-      opacity: 0; transition: 0.3s; pointer-events: none; z-index: 10;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.9);
+      padding: 12px 24px;
+      border-radius: 12px;
+      border: 1px solid #f59e0b;
+      color: #f59e0b;
+      font-weight: bold;
+      opacity: 0;
+      transition: 0.3s;
+      pointer-events: none;
     }
-    .toast.show { opacity: 1; transform: translate(-50%, -60%); }
+    .toast.show { opacity: 1; }
   </style>
 </head>
+
 <body>
-  <div class="app">
-    <div class="header">
-      <div class="title">لعبة بلنكو 🔥</div>
-      <div class="subtitle">كل كرة تنزل هي فرصة للربح</div>
-    </div>
+<div class="app">
 
-    <div class="stats-row">
-      <div class="stat-card">
-        <div class="stat-label">مجموع الأرباح</div>
-        <div class="stat-value win-text" id="winDisplay">0.00 د.ك</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">الكرات المتبقية</div>
-        <div class="stat-value ball-text" id="ballDisplay">10</div>
-      </div>
-    </div>
-
-    <div class="canvas-wrapper">
-      <canvas id="gameCanvas" width="360" height="640"></canvas>
-    </div>
-
-    <div class="controls">
-      <button class="main-btn btn-drop" id="dropBtn">⬇ نزّل الكرة</button>
-      <button class="main-btn btn-cashout" id="cashoutBtn" disabled>💰 إنهاء وسحب</button>
-    </div>
-
-    <div class="ticker-wrap">
-      <div class="ticker">
-        <div class="ticker-item">مرحباً بك يا <strong>{{ username }}</strong></div>
-        <div class="ticker-item">الجوائز الكبرى بانتظارك</div>
-        <div class="ticker-item">حظاً موفقاً!</div>
-      </div>
-    </div>
-
-    <div class="toast" id="toast"></div>
+  <div class="header">
+    <div class="title">لعبة بلنكو 🔥</div>
+    <div class="subtitle">النتيجة تُحدد من السيرفر</div>
   </div>
 
-  <audio id="bgMusic" loop>
-    <source src="{{ url_for('static', filename='sounds/background.mp3') }}" type="audio/mpeg">
-  </audio>
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">مجموع الأرباح</div>
+      <div class="stat-value win-text" id="winDisplay">0.00 د.ك</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">الكرات المتبقية</div>
+      <div class="stat-value ball-text" id="ballDisplay">0</div>
+    </div>
+  </div>
 
-  <script>
-    // --- 1. CONFIG ---
-    let currentBalls = parseFloat("{{ balance }}");
-    let currentWinnings = parseFloat("{{ winnings }}");
+  <div class="canvas-wrapper">
+    <canvas id="gameCanvas" width="360" height="640"></canvas>
+  </div>
 
-    const ballDisplay = document.getElementById('ballDisplay');
-    const winDisplay = document.getElementById('winDisplay');
-    ballDisplay.textContent = Math.floor(currentBalls);
-    winDisplay.textContent = currentWinnings.toFixed(2) + " د.ك";
+  <div class="controls">
+    <button class="main-btn btn-drop" id="dropBtn">⬇ نزّل الكرة</button>
+    <button class="main-btn btn-cashout" id="cashoutBtn" disabled>💰 إنهاء</button>
+  </div>
 
-    const dropBtn = document.getElementById('dropBtn');
-    const cashoutBtn = document.getElementById('cashoutBtn');
+  <div class="toast" id="toast"></div>
+</div>
 
-    if (currentBalls < 1) cashoutBtn.disabled = false;
+<script>
+(() => {
 
-    // --- SOUNDS ---
-    const sounds = {
-      click: new Audio("{{ url_for('static', filename='sounds/click.mp3') }}"),
-      drop: new Audio("{{ url_for('static', filename='sounds/drop.mp3') }}"),
-      winSmall: new Audio("{{ url_for('static', filename='sounds/win_small.mp3') }}"),
-      winBig: new Audio("{{ url_for('static', filename='sounds/win_big.mp3') }}"),
-      login: new Audio("{{ url_for('static', filename='sounds/login.mp3') }}")
-    };
-    Object.values(sounds).forEach(s => { s.volume = 0.5; s.load(); });
-    function playSound(name) { if (sounds[name]) { sounds[name].currentTime = 0; sounds[name].play().catch(()=>{}); } }
+  /* ------------------------------
+     SERVER-ALIGNED SLOT VALUES
+     TRUE BELL CURVE (CENTER LOWEST)
+  --------------------------------*/
+  const SLOT_VALUES = [
+    100, 50, 25, 10, 5,
+    2, 1, 0,
+    1, 2,
+    5, 10, 25, 50, 100
+  ];
+  const SLOT_COUNT = SLOT_VALUES.length;
 
-    const bgMusic = document.getElementById('bgMusic');
-    bgMusic.volume = 0.3;
-    function startMusic() {
-      bgMusic.play().catch(() => {
-        document.body.addEventListener('click', () => bgMusic.play().catch(()=>{}), { once: true });
-      });
-    }
-    startMusic();
+  let currentBalls = parseInt("{{ balance }}");
+  let currentWinnings = parseFloat("{{ winnings }}");
 
-    if (JSON.parse('{{ play_login_sound|tojson }}')) {
-      document.addEventListener("DOMContentLoaded", () => setTimeout(() => playSound('login'), 200));
-    }
+  const ballDisplay = document.getElementById("ballDisplay");
+  const winDisplay = document.getElementById("winDisplay");
+  const dropBtn = document.getElementById("dropBtn");
+  const cashoutBtn = document.getElementById("cashoutBtn");
+  const toast = document.getElementById("toast");
 
-    function showToast(msg) {
-      const t = document.getElementById('toast');
-      t.textContent = msg;
-      t.classList.add('show');
-      setTimeout(() => t.classList.remove('show'), 2000);
-    }
+  ballDisplay.textContent = currentBalls;
+  winDisplay.textContent = currentWinnings.toFixed(2) + " د.ك";
 
-    // -------------------------------------------------
-    // RENDER-SAFE FAST MODE CONTROLS (QUEUE + SINGLE IN-FLIGHT)
-    // -------------------------------------------------
-    let dropQueue = 0;
-    let dropInFlight = false;
-    let abortController = null;
+  function showToast(t) {
+    toast.textContent = t;
+    toast.classList.add("show");
+    setTimeout(() => toast.classList.remove("show"), 2000);
+  }
 
-    function updateUIButtons() {
-      const effectiveBalls = currentBalls - dropQueue;
-      dropBtn.disabled = (effectiveBalls <= 0);
+  /* ------------------------------
+     CANVAS + BOARD
+  --------------------------------*/
+  const canvas = document.getElementById("gameCanvas");
+  const ctx = canvas.getContext("2d");
+  const width = canvas.width;
+  const height = canvas.height;
 
-      if (currentBalls < 1 && dropQueue === 0 && balls.length === 0) {
-        cashoutBtn.disabled = false;
+  const slotY = height - 90;
+  const slotW = width / SLOT_COUNT;
+
+  const pegs = [];
+  const balls = [];
+
+  function initBoard() {
+    pegs.length = 0;
+    const rows = 13;
+    const spacingY = 36;
+    const usableW = width - 40;
+
+    for (let r = 0; r < rows; r++) {
+      const count = r + 1;
+      const gap = usableW / count;
+      const startX = (width - gap * (count - 1)) / 2;
+      const y = 60 + r * spacingY;
+
+      for (let c = 0; c < count; c++) {
+        pegs.push({ x: startX + c * gap, y });
       }
     }
+  }
 
-    async function processDropQueue() {
-      if (dropInFlight) return;
-      if (dropQueue <= 0) return;
-      if (currentBalls < 1) { dropQueue = 0; updateUIButtons(); return; }
+  function spawnBall(slotIndex, totalWin, winAmt, gameOver) {
+    balls.push({
+      x: width / 2,
+      y: 40,
+      vx: (Math.random() - 0.5) * 40,
+      vy: 0,
+      r: 6,
+      targetX: slotIndex * slotW + slotW / 2,
+      winAmt,
+      totalWin,
+      gameOver
+    });
+  }
 
-      dropInFlight = true;
+  async function dropBall() {
+    if (currentBalls <= 0) return;
 
-      try {
-        abortController = new AbortController();
+    dropBtn.disabled = true;
 
-        const res = await fetch('/api/drop', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'same-origin',
-          signal: abortController.signal
-        });
+    const res = await fetch("/api/drop", { method: "POST" });
+    const data = await res.json();
 
-        if (res.status === 429) {
-          showToast("هدّي اللعب شوي 😅");
-          dropQueue = Math.max(0, dropQueue - 1);
-          setTimeout(() => { dropInFlight = false; processDropQueue(); }, 350);
-          updateUIButtons();
-          return;
-        }
-
-        const data = await res.json();
-
-        if (!res.ok || data.error) {
-          showToast("تم تحديث الحالة");
-          dropQueue = 0;
-          dropInFlight = false;
-          updateUIButtons();
-          setTimeout(() => window.location.reload(), 600);
-          return;
-        }
-
-        currentBalls = Math.max(0, currentBalls - 1);
-        ballDisplay.textContent = Math.floor(currentBalls);
-
-        dropQueue = Math.max(0, dropQueue - 1);
-
-        // Visual drop + animation (slot-index-only)
-        spawnBall(
-          data.slot_index,
-          data.new_winnings,
-          data.win_amount,
-          data.game_over
-        );
-
-        if (data.game_over) {
-          cashoutBtn.disabled = false;
-          dropQueue = 0;
-        }
-
-      } catch (e) {
-        if (!(e && e.name === "AbortError")) {
-          showToast("خطأ في الاتصال");
-        }
-        dropQueue = Math.max(0, dropQueue - 1);
-      } finally {
-        dropInFlight = false;
-        abortController = null;
-        updateUIButtons();
-
-        if (dropQueue > 0 && currentBalls > 0) {
-          setTimeout(processDropQueue, 0);
-        }
-      }
+    if (!res.ok) {
+      showToast("خطأ");
+      dropBtn.disabled = false;
+      return;
     }
 
-    dropBtn.onclick = () => {
-      if (currentBalls < 1) { showToast("لا يوجد كرات"); return; }
+    currentBalls -= 1;
+    ballDisplay.textContent = currentBalls;
 
-      if (bgMusic.paused) bgMusic.play().catch(()=>{});
-      playSound('drop');
+    spawnBall(
+      data.slot_index,
+      data.new_winnings,
+      data.win_amount,
+      data.game_over
+    );
 
-      const maxQueue = 10;
-      if (dropQueue >= maxQueue) {
-        showToast("لحظة…");
-        return;
+    if (data.game_over) cashoutBtn.disabled = false;
+  }
+
+  function update(dt) {
+    for (let i = balls.length - 1; i >= 0; i--) {
+      const b = balls[i];
+
+      b.vy += 2200 * dt;
+      b.x += b.vx * dt;
+      b.y += b.vy * dt;
+
+      b.vx += (b.targetX - b.x) * 0.002;
+
+      if (b.y >= slotY) {
+        currentWinnings = b.totalWin;
+        winDisplay.textContent = currentWinnings.toFixed(2) + " د.ك";
+
+        if (b.winAmt > 0) showToast("+" + b.winAmt + " د.ك");
+        balls.splice(i, 1);
+
+        if (currentBalls <= 0) cashoutBtn.disabled = false;
       }
+    }
+  }
 
-      dropQueue += 1;
-      updateUIButtons();
-      processDropQueue();
-    };
+  function draw() {
+    ctx.clearRect(0, 0, width, height);
 
-    window.addEventListener("beforeunload", () => {
-      try { if (abortController) abortController.abort(); } catch (_) {}
+    ctx.fillStyle = "#fff";
+    pegs.forEach(p => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+      ctx.fill();
     });
 
-    cashoutBtn.onclick = async () => {
-      playSound('winBig');
-      cashoutBtn.disabled = true;
-      cashoutBtn.innerText = "جاري الحفظ...";
+    for (let i = 0; i < SLOT_COUNT; i++) {
+      ctx.fillStyle = "#1e293b";
+      ctx.fillRect(i * slotW, slotY, slotW - 1, 80);
 
-      try {
-        await fetch('/api/finish', { method: 'POST', credentials: 'same-origin' });
-      } catch (e) {}
-      window.location.href = "{{ url_for('result') }}";
-    };
-
-    // -------------------------------------------------
-    // BOARD SETUP — TRUE BELL CURVE (CENTER = LOWEST)
-    // -------------------------------------------------
-
-    // Slot values shown to user AND used for logic (single source of truth)
-    const SLOT_VALUES_KWD = [
-      1000, 200, 100, 50, 25, 10, 5, 2,
-      0, 0,
-      2, 5, 10, 25, 50, 100, 200, 1000
-    ];
-
-    const SLOT_COUNT = SLOT_VALUES_KWD.length;
-
-    const colors = {
-      loss: '#1f2937',     // 0 KWD
-      low: '#064e3b',      // 2–5 KWD
-      med: '#1e3a8a',      // 10–25 KWD
-      high: '#b45309',     // 50–100 KWD
-      jackpot: '#dc2626'   // ≥200 KWD
-    };
-
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    const width = 360; const height = 640;
-
-    let pegs = []; let balls = []; let particles = [];
-    const rows = 13; const topMargin = 50; const bottomHeight = 100;
-    const slotY = height - bottomHeight; const slotWidth = width / SLOT_COUNT;
-
-    // --- PATH DATABASE ---
-    const PATHS = {
-      '1000_L': ['A-1','B-1','C-1','D-1','E-1','F-1','G-1','H-1','I-1','J-1','K-1','L-1','M-1'],
-      '1000_R': ['A-1','B-2','C-3','D-4','E-5','F-6','G-7','H-8','I-9','J-10','K-11','L-12','M-13'],
-      '100_L': ['A-1','B-1','C-1','D-1','E-1','F-1','G-1','H-1','I-1','J-1','K-1','L-2','M-2'],
-      '100_R': ['A-1','B-2','C-3','D-4','E-5','F-6','G-7','H-8','I-9','J-10','K-11','L-11','M-12'],
-      '50_L':  ['A-1','B-1','C-2','D-2','E-2','F-3','G-3','H-3','I-2','J-2','K-2','L-3','M-3'],
-      '50_R':  ['A-1','B-2','C-2','D-3','E-4','F-5','G-6','H-7','I-8','J-9','K-10','L-10','M-11'],
-      '25_L':  ['A-1','B-1','C-2','D-2','E-3','F-3','G-2','H-2','I-3','J-3','K-3','L-4','M-4'],
-      '25_R':  ['A-1','B-2','C-2','D-3','E-3','F-4','G-5','H-6','I-6','J-7','K-8','L-9','M-10'],
-      '10_L':  ['A-1','B-2','C-2','D-2','E-2','F-3','G-4','H-4','I-5','J-5','K-4','L-5','M-5'],
-      '10_R':  ['A-1','B-1','C-2','D-3','E-4','F-5','G-5','H-6','I-7','J-8','K-8','L-9','M-9'],
-      'Center_Slide_L': ['A-1','B-1','C-2','D-2','E-3','F-3','G-4','H-4','I-5','J-5','K-6','L-6','M-7'],
-      'Center_Slide_R': ['A-1','B-2','C-2','D-3','E-3','F-4','G-4','H-5','I-5','J-6','K-7','L-7','M-7']
-    };
-
-    function initBoard() {
-      pegs = [];
-      const rowLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M'];
-      const usableWidth = width - 40;
-      const spacingX = usableWidth / (rows - 1);
-
-      for (let r=0; r<rows; r++) {
-        const count = r + 1;
-        const rowWidth = (count - 1) * spacingX;
-        const startX = (width/2) - (rowWidth/2);
-        const y = topMargin + (r * 35);
-
-        for (let c=0; c<count; c++) {
-          pegs.push({
-            x: startX + c*spacingX,
-            y: y,
-            name: `${rowLabels[r]}-${c+1}`,
-            row: rowLabels[r]
-          });
-        }
-      }
+      ctx.save();
+      ctx.translate(i * slotW + slotW / 2, slotY + 40);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillStyle = "#fff";
+      ctx.font = "bold 11px Cairo";
+      ctx.fillText(SLOT_VALUES[i] + " د.ك", 0, 4);
+      ctx.restore();
     }
 
-    function spawnParticles(x, y, color, count=5) {
-      for (let i=0; i<count; i++) {
-        particles.push({
-          x: x, y: y,
-          vx: (Math.random()-0.5)*4,
-          vy: (Math.random()-0.5)*4,
-          life: 1.0,
-          color: color
-        });
-      }
-    }
+    balls.forEach(b => {
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+      ctx.fillStyle = "#fbbf24";
+      ctx.fill();
+    });
+  }
 
-    let lastTs = 0;
-    const GRAVITY = 2300;
-
-    function spawnBall(targetSlot, winTotal, winAmt, isGameOver) {
-      const targetX = (targetSlot * slotWidth) + (slotWidth / 2);
-
-      const slotValue = SLOT_VALUES_KWD[targetSlot];
-
-      let selectedPathKey = 'Center_Slide_L';
-
-      if (slotValue === 0) {
-        selectedPathKey = (targetSlot === 8) ? 'Center_Slide_L' : 'Center_Slide_R';
-      }
-      else if (slotValue >= 1000) {
-        selectedPathKey = (targetSlot < 9) ? '1000_L' : '1000_R';
-      }
-      else if (slotValue >= 100) {
-        selectedPathKey = (targetSlot < 9) ? '100_L' : '100_R';
-      }
-      else if (slotValue >= 50) {
-        selectedPathKey = (targetSlot < 9) ? '50_L' : '50_R';
-      }
-      else if (slotValue >= 10) {
-        selectedPathKey = (targetSlot < 9) ? '10_L' : '10_R';
-      }
-      else {
-        selectedPathKey = (targetSlot < 9) ? 'Center_Slide_L' : 'Center_Slide_R';
-      }
-
-      const script = PATHS[selectedPathKey] || PATHS['Center_Slide_L'];
-
-      let restitution = 0.65;
-      let drag = 0.99;
-
-      if (slotValue === 0) {
-        restitution = 0.3;
-        drag = 0.96;
-      }
-      else if (slotValue >= 100) {
-        restitution = 0.75;
-        drag = 0.995;
-      }
-
-      balls.push({
-        x: width/2, y: 60,
-        vx: (Math.random()-0.5)*10,
-        vy: 0,
-        r: 6,
-        targetX: targetX,
-        targetSlot: targetSlot,
-        finalWin: winTotal,
-        winAmt: winAmt,
-        gameOver: isGameOver,
-        path: script,
-        pathIndex: 0,
-        restitution: restitution,
-        drag: drag
-      });
-    }
-
-    function loop(ts) {
-      if (!lastTs) lastTs = ts;
-      let dt = (ts - lastTs) / 1000; lastTs = ts;
-      if (dt > 0.03) dt = 0.03;
-
-      ctx.clearRect(0,0,width,height);
-
-      ctx.fillStyle = "rgba(255,255,255,0.8)";
-      pegs.forEach(p => { ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI*2); ctx.fill(); });
-
-      for (let i=0; i<SLOT_COUNT; i++) {
-        const x = i * slotWidth;
-        const value = SLOT_VALUES_KWD[i];
-
-        let c = colors.loss;
-        if (value >= 200) c = colors.jackpot;
-        else if (value >= 50) c = colors.high;
-        else if (value >= 10) c = colors.med;
-        else if (value >= 2) c = colors.low;
-
-        ctx.fillStyle = c;
-        ctx.fillRect(x, slotY, slotWidth-1, bottomHeight);
-
-        ctx.save();
-        ctx.translate(x + slotWidth/2, slotY + 50);
-        ctx.rotate(-Math.PI/2);
-        ctx.fillStyle="#fff";
-        ctx.font="bold 10px Cairo";
-        ctx.fillText(SLOT_VALUES_KWD[i] + " د.ك", 0, 4);
-        ctx.restore();
-      }
-
-      for (let i = balls.length - 1; i >= 0; i--) {
-        let b = balls[i];
-
-        if (b.pathIndex < b.path.length) {
-          let targetID = b.path[b.pathIndex];
-          let targetPeg = pegs.find(p => p.name === targetID);
-
-          if (targetPeg) {
-            let aimX = targetPeg.x;
-            if (b.drag < 0.97) {
-              if (b.targetSlot === 8) aimX -= 5;
-              if (b.targetSlot === 9) aimX += 5;
-            }
-
-            if (b.y < targetPeg.y - 5) {
-              const dx = aimX - b.x;
-              b.vx += dx * 10.0 * dt;
-            } else if (b.y > targetPeg.y + 10) {
-              b.pathIndex++;
-            }
-          }
-        }
-
-        b.vy += GRAVITY * dt;
-        b.vx *= b.drag; b.vy *= b.drag;
-        b.x += b.vx * dt; b.y += b.vy * dt;
-
-        if (b.x < b.r) { b.x = b.r; b.vx *= -0.6; }
-        if (b.x > width - b.r) { b.x = width-b.r; b.vx *= -0.6; }
-
-        if (b.y < slotY - 10) {
-          for (let p of pegs) {
-            const dx = b.x - p.x; const dy = b.y - p.y;
-            const dist2 = dx*dx + dy*dy;
-            const minDist = b.r + 3;
-
-            if (dist2 < minDist*minDist) {
-              const dist = Math.sqrt(dist2) || 0.001;
-              const nx = dx/dist; const ny = dy/dist;
-              b.x = p.x + nx*(minDist+0.1); b.y = p.y + ny*(minDist+0.1);
-
-              const vn = b.vx*nx + b.vy*ny;
-              b.vx = (b.vx - 2*vn*nx) * b.restitution;
-              b.vy = (b.vy - 2*vn*ny) * b.restitution;
-
-              if (b.pathIndex < b.path.length) {
-                const targetID = b.path[b.pathIndex];
-                if (p.name === targetID || p.row === targetID.split('-')[0]) {
-                  b.pathIndex++;
-                  const chaos = (b.restitution < 0.5) ? 5 : 40;
-                  b.vx += (Math.random() - 0.5) * chaos;
-                }
-              }
-
-              if (p.row === 'M') {
-                const finalDist = b.targetX - b.x;
-                b.vx = finalDist * 8.0;
-                b.vy = Math.abs(b.vy) + 50;
-              }
-
-              spawnParticles(p.x, p.y, '#fff', 2);
-              if (Math.random() > 0.5) playSound('click');
-            }
-          }
-        }
-
-        ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
-        ctx.fillStyle = "#fbbf24"; ctx.fill();
-
-        if (b.y >= slotY + 5) {
-          b.y = slotY + 5;
-          currentWinnings = b.finalWin;
-          winDisplay.textContent = currentWinnings.toFixed(2) + " د.ك";
-
-          if (b.winAmt > 0) {
-            spawnParticles(b.x, slotY, '#facc15', 15);
-            showToast(`+${b.winAmt} د.ك`);
-            playSound(SLOT_VALUES_KWD[b.targetSlot] >= 10 ? 'winBig' : 'winSmall');
-          }
-
-          balls.splice(i, 1);
-
-          if (b.gameOver) {
-            cashoutBtn.disabled = false;
-            dropQueue = 0;
-            updateUIButtons();
-          } else {
-            updateUIButtons();
-          }
-        }
-      }
-
-      for (let i=particles.length-1; i>=0; i--) {
-        let p = particles[i];
-        p.x += p.vx; p.y += p.vy; p.life -= 0.05;
-        ctx.fillStyle = p.color;
-        ctx.globalAlpha = p.life;
-        ctx.fillRect(p.x, p.y, 2, 2);
-        ctx.globalAlpha = 1.0;
-        if (p.life <= 0) particles.splice(i,1);
-      }
-
-      requestAnimationFrame(loop);
-    }
-
-    initBoard();
-    updateUIButtons();
+  let last = 0;
+  function loop(ts) {
+    const dt = Math.min((ts - last) / 1000, 0.03);
+    last = ts;
+    update(dt);
+    draw();
     requestAnimationFrame(loop);
-  </script>
+  }
+
+  dropBtn.onclick = dropBall;
+  cashoutBtn.onclick = async () => {
+    await fetch("/api/finish", { method: "POST" });
+    window.location.href = "{{ url_for('result') }}";
+  };
+
+  initBoard();
+  requestAnimationFrame(loop);
+})();
+</script>
 </body>
 </html>
-```
