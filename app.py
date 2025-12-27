@@ -29,13 +29,10 @@ REQUIRED_ENV_VARS = ["SECRET_KEY", "DATABASE_URL"]
 missing = [k for k in REQUIRED_ENV_VARS if not os.getenv(k)]
 if missing:
     raise RuntimeError(
-        "Missing required environment variables: "
-        + ", ".join(missing)
+        "Missing required environment variables: " + ", ".join(missing)
     )
 
-db_url = os.getenv("DATABASE_URL", "").strip()
-if db_url.startswith("postgres://"):
-    db_url = db_url.replace("postgres://", "postgresql://", 1)
+db_url = os.getenv("DATABASE_URL").replace("postgres://", "postgresql://", 1)
 
 # -------------------------------------------------
 # APP CONFIG
@@ -47,75 +44,44 @@ app.config.update(
     SQLALCHEMY_TRACK_MODIFICATIONS=False,
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax",
+    SESSION_COOKIE_SECURE=os.getenv("FLASK_SECURE_COOKIES", "1") == "1",
 )
-
-app.config["SESSION_COOKIE_SECURE"] = os.getenv("FLASK_SECURE_COOKIES", "1") == "1"
-
-app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-    "pool_pre_ping": True,
-    "pool_recycle": 300,
-    "pool_size": int(os.getenv("DB_POOL_SIZE", "5")),
-    "max_overflow": int(os.getenv("DB_MAX_OVERFLOW", "10")),
-}
 
 # -------------------------------------------------
 # DATABASE
 # -------------------------------------------------
-db = SQLAlchemy()
-db.init_app(app)
+db = SQLAlchemy(app)
 
 with app.app_context():
     engine = db.engine
 
     @event.listens_for(engine, "connect")
     def on_connect(dbapi_connection, _):
-        cursor = dbapi_connection.cursor()
         if app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
-            cursor.execute(
-                f"SET statement_timeout = {os.getenv('DB_STATEMENT_TIMEOUT_MS', '2000')}"
-            )
-            cursor.execute(
-                f"SET lock_timeout = {os.getenv('DB_LOCK_TIMEOUT_MS', '600')}"
-            )
-            cursor.execute(
-                f"SET idle_in_transaction_session_timeout = {os.getenv('DB_IDLE_TX_TIMEOUT_MS', '4000')}"
-            )
-        cursor.close()
-
-# -------------------------------------------------
-# CSRF
-# -------------------------------------------------
-def generate_csrf_token():
-    token = secrets.token_urlsafe(32)
-    session["csrf_token"] = token
-    return token
-
-def validate_csrf_token(token: str) -> bool:
-    return bool(token and session.pop("csrf_token", None) == token)
+            cursor = dbapi_connection.cursor()
+            cursor.execute("SET statement_timeout = 2000")
+            cursor.execute("SET lock_timeout = 600")
+            cursor.execute("SET idle_in_transaction_session_timeout = 4000")
+            cursor.close()
 
 # -------------------------------------------------
 # LOGGING
 # -------------------------------------------------
-logging.basicConfig(
-    level=os.getenv("LOG_LEVEL", "INFO").upper(),
-    format="%(asctime)s %(levelname)s %(message)s",
-)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("plinko")
 
 # -------------------------------------------------
 # LOGIN
 # -------------------------------------------------
-login_manager = LoginManager()
-login_manager.init_app(app)
+login_manager = LoginManager(app)
 login_manager.login_view = "login"
 
 # -------------------------------------------------
-# RATE LIMITING
+# RATE LIMIT
 # -------------------------------------------------
 limiter = Limiter(
     key_func=get_remote_address,
     app=app,
-    storage_uri=os.getenv("LIMITER_STORAGE_URI", "memory://"),
     default_limits=["600 per minute"],
 )
 
@@ -124,7 +90,7 @@ limiter = Limiter(
 # -------------------------------------------------
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(150), unique=True, nullable=False, index=True)
+    username = db.Column(db.String(150), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
 
     balance = db.Column(db.Float, default=10.0)
@@ -132,33 +98,20 @@ class User(UserMixin, db.Model):
     status = db.Column(db.String(20), default="new")
 
 @login_manager.user_loader
-def load_user(user_id: str):
+def load_user(user_id):
     return db.session.get(User, int(user_id))
 
 # -------------------------------------------------
-# SLOT LAYOUT (MUST MATCH FRONTEND)
+# SLOT CONFIG (MUST MATCH FRONTEND)
 # -------------------------------------------------
 SLOT_LAYOUT = [
-    100, 50, 25, 10, 5,
-    2, 1, 0,
-    1, 2,
-    5, 10, 25, 50, 100
+    1000, 100, 50, 25, 10, 5, 2, 1,
+    0, 0,
+    1, 2, 5, 10, 25, 50, 100, 1000
 ]
 
 # -------------------------------------------------
-# HEALTHCHECK
-# -------------------------------------------------
-@app.route("/healthz")
-def healthz():
-    try:
-        db.session.execute(db.text("SELECT 1"))
-        return jsonify(ok=True)
-    except Exception as e:
-        logger.exception("Healthcheck failed")
-        return jsonify(ok=False, error=str(e)), 500
-
-# -------------------------------------------------
-# AUTH ROUTES
+# ROUTES
 # -------------------------------------------------
 @app.route("/", methods=["GET", "POST"])
 def login():
@@ -167,25 +120,19 @@ def login():
 
     error = None
     if request.method == "POST":
-        if not validate_csrf_token(request.form.get("csrf_token", "")):
-            error = "انتهت الجلسة"
-        else:
-            user = User.query.filter_by(
-                username=(request.form.get("username") or "").strip()
-            ).first()
+        user = User.query.filter_by(
+            username=(request.form.get("username") or "").strip()
+        ).first()
 
-            if user and check_password_hash(
-                user.password_hash, request.form.get("password") or ""
-            ):
-                login_user(user)
-                if user.status == "new":
-                    user.status = "playing"
-                    db.session.commit()
-                session["play_login_sound"] = True
-                return redirect(url_for("game"))
-            error = "بيانات الدخول غير صحيحة"
+        if user and check_password_hash(user.password_hash, request.form.get("password")):
+            login_user(user)
+            user.status = "playing"
+            db.session.commit()
+            return redirect(url_for("game"))
 
-    return render_template("login.html", error=error, csrf_token=generate_csrf_token())
+        error = "اسم المستخدم أو كلمة المرور غير صحيحة"
+
+    return render_template("login.html", error=error)
 
 @app.route("/logout")
 @login_required
@@ -194,13 +141,10 @@ def logout():
     session.clear()
     return redirect(url_for("login"))
 
-# -------------------------------------------------
-# GAME
-# -------------------------------------------------
 @app.route("/game")
 @login_required
 def game():
-    if current_user.balance < 1 or current_user.status == "finished":
+    if current_user.balance < 1:
         return redirect(url_for("result"))
 
     return render_template(
@@ -208,71 +152,64 @@ def game():
         balance=current_user.balance,
         winnings=current_user.winnings,
         username=current_user.username,
-        play_login_sound=session.pop("play_login_sound", False),
     )
 
 # -------------------------------------------------
-# DROP (SERVER AUTHORITATIVE)
+# DROP (SLOT-INDEX-ONLY)
 # -------------------------------------------------
 @app.route("/api/drop", methods=["POST"])
 @login_required
-@limiter.limit(f"{1000 // int(os.getenv('DROP_MIN_INTERVAL_MS', '150'))} per second")
+@limiter.limit("8 per second")
 def drop_ball():
     try:
-        user = (
-            db.session.query(User)
-            .filter_by(id=current_user.id)
-            .with_for_update()
-            .first()
-        )
+        user = db.session.query(User).with_for_update().get(current_user.id)
 
         if user.balance < 1:
-            return jsonify(error="No balls left"), 400
+            return jsonify({"error": "No balls left"}), 400
 
         slot_index = random.randrange(len(SLOT_LAYOUT))
 
         if slot_index < 0 or slot_index >= len(SLOT_LAYOUT):
             logger.error("Invalid slot index", extra={"slot_index": slot_index})
-            return jsonify(error="Invalid slot"), 500
+            db.session.rollback()
+            return jsonify({"error": "Invalid slot"}), 500
 
         win_amount = float(SLOT_LAYOUT[slot_index])
 
-        user.balance -= 1
+        user.balance -= 1.0
         user.winnings += win_amount
 
         game_over = user.balance < 1
+        if game_over:
+            user.status = "finished"
 
         db.session.commit()
 
-        return jsonify(
-            slot_index=slot_index,
-            win_amount=win_amount,
-            new_balance=user.balance,
-            new_winnings=user.winnings,
-            game_over=game_over,
-        )
+        return jsonify({
+            "slot_index": slot_index,
+            "win_amount": win_amount,
+            "new_balance": user.balance,
+            "new_winnings": user.winnings,
+            "game_over": game_over,
+        })
 
     except Exception:
         db.session.rollback()
         logger.exception("Drop failed")
-        return jsonify(error="Server error"), 500
+        return jsonify({"error": "Server error"}), 500
 
-# -------------------------------------------------
-# FINISH
-# -------------------------------------------------
 @app.route("/api/finish", methods=["POST"])
 @login_required
 def finish_game():
     current_user.status = "finished"
     db.session.commit()
-    return jsonify(ok=True)
+    return jsonify({"ok": True})
 
 @app.route("/result")
 @login_required
 def result():
-    if current_user.status != "finished":
-        current_user.status = "finished"
-        db.session.commit()
+    current_user.status = "finished"
+    db.session.commit()
 
     return render_template(
         "result.html",
